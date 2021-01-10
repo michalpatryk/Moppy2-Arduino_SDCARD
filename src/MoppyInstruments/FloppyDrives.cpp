@@ -78,7 +78,7 @@ void FloppyDrives::setup() {
   // If MoppyConfig wants a startup sound, play the startupSound on the
   // first drive.
   if (PLAY_STARTUP_SOUND) {
-    startupSound(FIRST_DRIVE);
+    startupSound(2);
     delay(500);
     resetAll();
   }

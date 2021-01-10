@@ -5,6 +5,7 @@
 #include "MoppyConfig.h"
 #include "MoppyInstruments/MoppyInstrument.h"
 #include "CustomSongTables.h"
+#include "MoppySD/SDMacros.h"
 /**********
  * MoppyInstruments handle the sound-creation logic for your setup.  The
  * instrument class provides a systemMessage handler function and a deviceMessage
@@ -66,12 +67,9 @@ MoppyUDP network = MoppyUDP(instrument);
 
 #ifdef SDCARD
 #include "MoppySD/MoppySD.h"
+MoppySD sdManager = MoppySD(instrument);
 #endif
 
-#define BTN_R 14
-#define BTN_M 15
-#define BTN_L 16
-#define SS 10
 void blinkLEDMain() {
     digitalWrite(13, HIGH); // set the LED on
     delay(250);              // wait for a second
@@ -128,17 +126,22 @@ void setup()
     pinMode(BTN_R, INPUT);
     pinMode(BTN_M, INPUT);
     pinMode(BTN_L, INPUT);
+    pinMode(ATX, OUTPUT);
     pinMode(SS, OUTPUT);
+    //digitalWrite(ATX, HIGH);
+	
     Serial.begin(9600);
     
     while (!Serial) {
         ; // wait for serial port to connect. Needed for native USB port only
     }
+    sdManager.enableATX();
     Serial.print(F("Initializing SD card..."));
     if (!SD.begin(SS)) {
         Serial.println(F("initialization failed!"));
         while (1);
     }
+
     Serial.println(F("initialization done."));
  //   //myFile = SD.open("/");
  //   //printDirectory(myFile, 0);
@@ -172,7 +175,8 @@ void setup()
  //   unsigned long lastRun = 0;
 	////bring the second floppy down an octave
 
-    for (int i = 0; i < fmHeader.notesCount; i++)
+    //for (int i = 0; i < fmHeader.notesCount; i++)
+    for (int i = 0; i < 5; i++)
     {
         //Serial.println(F("Note:"));
         //Serial.println(fmBlock.note1[i]);
@@ -198,31 +202,8 @@ void setup()
 // The loop function is called in an endless loop
 void loop()
 {
-    int btnL = digitalRead(BTN_L);
-    int btnM = digitalRead(BTN_M);
-    int btnR = digitalRead(BTN_R);
-    uint8_t payload[] = { _C , _D, _E };
-	if(btnL == LOW)
-	{
-        Serial.println(F("BtnL working"));
-        instrument->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEON, payload);
-	}
-	else if (btnM == LOW)
-	{
-        Serial.println(F("BtnM working"));
-        instrument->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEON, payload+1);
-	}
-    else if(btnR == LOW)
-    {
-        Serial.println(F("BtnR working"));
-        instrument->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEON, payload+2);
-    }
-    else
-    {
-        //Serial.println(F("Nothing pressed"));
-    }
-    delay(100);
-    instrument->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEOFF, nullptr);
+    sdManager.loopEvent();
+    
     //Serial.println(F("Loop end"));
     //
 	//Check for any buttons pressed
@@ -232,10 +213,7 @@ void loop()
 	//  song management:
 	//  load sd card and place data into memory - 2x1024B(note) 2x2048B(duration)?
 	//      start playing notes. When on specific point of memory buffer (half?) read again
-    
-	//sub address 1 - floppy 1
-	//sub address 2 - floppy 2
-   
+
 	// Endlessly read messages on the network.  The network implementation
 	// will call the system or device handlers on the intrument whenever a message is received.
     //network.readMessages();
