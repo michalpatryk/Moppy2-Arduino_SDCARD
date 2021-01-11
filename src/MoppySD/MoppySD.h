@@ -35,6 +35,7 @@ public:
 private:
     bool isNowPlaying = false;
     uint8_t filePos = 0;
+    uint8_t tracksNum = 2;      // 2 -> 3 tracks on sd card
     uint16_t messagePos1 = 0;    // position on note1/duration1
     uint16_t messagePos2 = 0;    // position on note2/duration2
     uint32_t timer = 0;         // last milis check

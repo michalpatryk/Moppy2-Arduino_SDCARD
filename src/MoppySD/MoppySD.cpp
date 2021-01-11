@@ -80,22 +80,50 @@ void MoppySD::startupSD()
 }
 void MoppySD::startSong()
 {
+    if (DEBUG_SERIAL)
+    {
+        Serial.println(filePos);
+    }
     isNowPlaying = true;
-    myFile = SD.open("/");
-    printDirectory(myFile, 0);
-    Serial.println("My:");
-    myFile = SD.open("/");
-    File entry = myFile.openNextFile();
-    Serial.println(myFile.name());
-    Serial.println(entry.name());
-    Serial.println("Another file: ");
-    entry = myFile.openNextFile();
-    Serial.println(myFile.name());
-    Serial.println(entry.name());
-    //myFile = myFile.openNextFile();
-    //Serial.println(myFile.name());
-    //myFile = myFile.openNextFile();
-    //Serial.println(myFile.name());
+	if(filePos == 0)
+	{
+        myFile = SD.open(F("/64BTET.fm"));
+	}
+    else if(filePos == 1)
+    {
+	    myFile = SD.open(F("/64BPIR.fm"));
+    }
+    else if(filePos == 2)
+    {
+        uint8_t note[] = { 44 };
+        targetConsumer->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEON, note);
+        delay(200);
+        targetConsumer->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEOFF, nullptr);
+        delay(1000);
+        myFile = SD.open(F("/64BPIR.fm"));
+	    //myFile = SD.open(F("/64BSTL.fm"));
+    }
+    else
+    {
+        char name[6] = { '0', '0', '0', '.', 'f','m' };
+        name[2] += filePos - 2;
+        myFile = SD.open(name);
+    }
+    //myFile = SD.open("/");
+    //printDirectory(myFile, 0);
+    //myFile.close();
+//    Serial.println("My:");
+ //   myFile = SD.open("/");
+	//for(int i = 0; i<3; i++)
+	//{
+ //       Serial.println("Start of loop: ");
+ //       Serial.println(myFile.name());
+ //       File entry = myFile.openNextFile();
+ //       Serial.println(myFile.name());
+ //       Serial.println(entry.name());
+	//}
+ //   
+
     //myFile = SD.open(F("/64BTET.fm")); //TODO its for debug
     //myFile = SD.open(F("/64BPIR.fm"));
     myFile.read(&fmHeader, 5);
@@ -137,15 +165,30 @@ void MoppySD::loopEvent()
         if (DEBUG_SERIAL)
         {
             Serial.println(F("BtnL working"));
+            Serial.println(filePos);
         }
     	//PREVIOUS SONG
         //targetConsumer->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEON, payload);
+        if(filePos == 0)
+        {
+            filePos = tracksNum;
+        }
+        else
+        {
+            filePos -= 1;
+        }
         delay(200);
+        if (DEBUG_SERIAL)
+        {
+            Serial.println(F("After"));
+            Serial.println(filePos);
+        }
     }
     else if (btnM == LOW)
     {
         if (DEBUG_SERIAL)
         {
+        	
             Serial.println(F("BtnM working"));
         }
     	//START/STOP
@@ -173,10 +216,24 @@ void MoppySD::loopEvent()
         if (DEBUG_SERIAL)
         {
             Serial.println(F("BtnR working"));
+            Serial.println(filePos);
         }
     	//NEXT SONG
+    	if(filePos >= tracksNum)
+    	{
+            filePos = 0;
+    	}
+        else
+        {
+            filePos += 1;
+        }
         //targetConsumer->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEON, payload + 2);
         delay(200);
+        if (DEBUG_SERIAL)
+        {
+            Serial.println(F("After"));
+            Serial.println(filePos);
+        }
     }
     else
     {
