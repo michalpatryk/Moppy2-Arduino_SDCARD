@@ -95,13 +95,13 @@ void MoppySD::startSong()
     }
     else if(filePos == 2)
     {
-        uint8_t note[] = { 44 };
-        targetConsumer->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEON, note);
-        delay(200);
-        targetConsumer->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEOFF, nullptr);
-        delay(1000);
-        myFile = SD.open(F("/64BPIR.fm"));
-	    //myFile = SD.open(F("/64BSTL.fm"));
+        //uint8_t note[] = { 44 };
+        //targetConsumer->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEON, note);
+        //delay(200);
+        //targetConsumer->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEOFF, nullptr);
+        //delay(1000);
+        //myFile = SD.open(F("/64BPIR.fm"));
+	    myFile = SD.open(F("/64BSTL.fm"));
     }
     else
     {
@@ -150,7 +150,7 @@ void MoppySD::startSong()
     floppy2Time = floppy1Time;
     targetConsumer->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEON, fmBlock.note1 + messagePos1);
     targetConsumer->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEON, fmBlock.note2 + messagePos2);
-
+    myFile.close();
     //floppy1Time = 0;
     //floppy2Time = 0;
 }
