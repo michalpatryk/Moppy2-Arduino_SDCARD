@@ -31,4 +31,6 @@
 
 #define LEAD_FLOPPY 2
 #define ACCOMPANIMENT_FLOPPY 3
+
+#define DEBUG_SERIAL true
 #endif

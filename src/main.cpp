@@ -1,6 +1,5 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include <SD.h>
+
 #include <avr/pgmspace.h>
 #include "MoppyConfig.h"
 #include "MoppyInstruments/MoppyInstrument.h"
@@ -101,101 +100,33 @@ void blinkLEDMain() {
 //        entry.close();
 //    }
 //}
+
 //The setup function is called once at startup of the sketch
-struct FMHeader
-{
-    uint8_t sizeHeader;
-    uint8_t blockWidth;
-    uint8_t baseDuration;
-    uint16_t notesCount;
-};
-struct FMBlock
-{
-    uint8_t duration1[64];
-    uint8_t note1[64];
-    uint8_t duration2[64];
-    uint8_t note2[64];
-};
-
-File myFile;
-FMHeader fmHeader;
-FMBlock fmBlock;
-
 void setup()
 {
+    // Call setup() on the instrument to allow to to prepare for action
+    instrument->setup();
+	
     pinMode(BTN_R, INPUT);
     pinMode(BTN_M, INPUT);
     pinMode(BTN_L, INPUT);
     pinMode(ATX, OUTPUT);
     pinMode(SS, OUTPUT);
-    //digitalWrite(ATX, HIGH);
-	
-    Serial.begin(9600);
-    
-    while (!Serial) {
-        ; // wait for serial port to connect. Needed for native USB port only
-    }
+    digitalWrite(SS, HIGH);
+	if(DEBUG_SERIAL)
+	{
+        Serial.begin(9600);
+        while (!Serial) {
+            ; // wait for serial port to connect. Needed for native USB port only
+        }
+	}
     sdManager.enableATX();
-    Serial.print(F("Initializing SD card..."));
-    if (!SD.begin(SS)) {
-        Serial.println(F("initialization failed!"));
-        while (1);
-    }
-
-    Serial.println(F("initialization done."));
+    sdManager.startupSD();
+    //sdManager.debugPlay();
  //   //myFile = SD.open("/");
  //   //printDirectory(myFile, 0);
-    myFile = SD.open(F("/64BTET.fm"));
- //   
- //   
-	myFile.read(&fmHeader, 5);
-    Serial.println(fmHeader.sizeHeader);
-    Serial.println(fmHeader.blockWidth);
-    Serial.println(fmHeader.baseDuration);
-    Serial.println(fmHeader.notesCount);
-    myFile.read(&fmBlock, 256);
-    Serial.println(F("Duration1: "));
-    Serial.println(fmBlock.duration1[0]);
-    Serial.println(fmBlock.duration1[1]);
-    Serial.println(fmBlock.duration1[2]);
-    Serial.println(fmBlock.duration1[3]);
-    // Call setup() on the instrument to allow to to prepare for action
-    instrument->setup();
-
-    // setup button pins
-    // btn R - pc0 (14)
-    // btn M - pc1 (15)
-    // brn L - pc2 (16)
-    // setup atx pin to high
-	
-    //_E B _C B _C B _A _A _C _E _D _C B _C _D _E _C _A _A _D _F a _G _F _E _C _E _D _C B _C _D _E _C _A _A
-    //_E........._A............._E......._A....._D........._C........._E......._A...
-
- //   uint8_t nullLoad[] = { 0 };
- //   unsigned long lastRun = 0;
-	////bring the second floppy down an octave
-
-    //for (int i = 0; i < fmHeader.notesCount; i++)
-    for (int i = 0; i < 5; i++)
-    {
-        //Serial.println(F("Note:"));
-        //Serial.println(fmBlock.note1[i]);
-        //Serial.println(F("BaseDuration:"));
-        //Serial.println((fmHeader.baseDuration));
-        //Serial.println(F("Mult:"));
-        //Serial.println(fmBlock.duration1[i]);
-        //Serial.println(F("Delay:"));
-        //Serial.println(fmHeader.baseDuration * fmBlock.duration1[i]);
-        //instrument->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEON, tetrisNoteFloppy1 + i);
-        instrument->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEON, fmBlock.note1 + i);
-        //instrument->handleDeviceMessage(ACCOMPANIMENT_FLOPPY, NETBYTE_DEV_NOTEON, fmBlock.note2 + i);
-        //delay(tetrisDurationFloppy1[i]*4);
-        delay(fmHeader.baseDuration * fmBlock.duration1[i] * 2);
-        instrument->handleDeviceMessage(LEAD_FLOPPY, NETBYTE_DEV_NOTEOFF, nullptr);
-        //blinkLEDMain();
-        delay(50);
-    }
-
+    
+    
 }
 
 
@@ -203,9 +134,6 @@ void setup()
 void loop()
 {
     sdManager.loopEvent();
-    
-    //Serial.println(F("Loop end"));
-    //
 	//Check for any buttons pressed
 	//if not -> song management
 	//if yes -> reset all flopps -> button management
